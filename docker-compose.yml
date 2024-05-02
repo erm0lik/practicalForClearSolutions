@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: db
+    image: postgres:13.3
+    environment:
+      POSTGRES_PASSWORD: 'Vlad211003'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_DB: 'testDb'
+    volumes:
+      - ./src/main/resources/static/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '6565:5432'
+    restart: unless-stopped
+
+  app:
+    container_name: app
+    image: test:1.0
+    restart: always
+    ports:
+      - "7070:7070"
+    depends_on:
+      - postgres
+volumes:
+  pgdata:
