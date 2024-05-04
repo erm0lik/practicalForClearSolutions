@@ -6,10 +6,17 @@ import com.example.practicalforclearsolutions.dto.Dates;
 import com.example.practicalforclearsolutions.dto.UsersDto;
 import com.example.practicalforclearsolutions.dto.validationGroupInterface.EmptyFieldsValidationGroup;
 import com.example.practicalforclearsolutions.service.UsersService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -23,12 +30,21 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
+@Tag(name = "Users", description = "Controller for user management")
 public class UsersController {
     private final UsersService userService;
     @Value("${user.min.age}")
     private int minAge;
 
-    @PostMapping
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Create user",
+            description = "User creation , data validation and age verification."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UsersDto.class))),
+            @ApiResponse(responseCode = "400" ,description = "Bad Request")
+    })
     public ResponseEntity<Object> createUser(@Valid @RequestBody UsersDto usersDto, BindingResult result)
             throws MinAgeException, ValidationException {
         if (result.hasErrors()) {
@@ -40,7 +56,15 @@ public class UsersController {
         return ResponseEntity.status(HttpStatus.OK).body(savedUser);
     }
 
-    @PutMapping("/{userId}")
+    @PutMapping(path = "/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "User update ",
+            description = "Full or partial user update, data and age validation. "
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UsersDto.class))),
+            @ApiResponse(responseCode = "400" ,description = "Bad Request")
+    })
     public ResponseEntity<Object> updateUserFields(@PathVariable Long userId,
                                                    @Validated(EmptyFieldsValidationGroup.class)
                                                    @RequestBody UsersDto userDto, BindingResult result)
@@ -53,16 +77,32 @@ public class UsersController {
 
         UsersDto updatedUser = userService.updateUsersFields(userId, userDto);
         return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
-
-
     }
 
-    @DeleteMapping("/{userId}")
+
+    @DeleteMapping(path = "/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Deleting a user ",
+            description = "Deleting a user by its unique identifier"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UsersDto.class))),
+            @ApiResponse(responseCode = "404" ,description = "Not Found")
+    })
     public ResponseEntity<Object> deleteById(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.deleteUserById(userId));
     }
 
-    @GetMapping("/dates")
+    @GetMapping(path = "/dates", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Getting the list of users",
+            description = "Getting the list of users by their date of birth, dates are passed through JSON"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UsersDto.class))),
+            @ApiResponse(responseCode = "400" ,description = "Bad Request"),
+            @ApiResponse(responseCode = "404" ,description = "Not Found")
+    })
     public ResponseEntity<Object> getAllByDates(@Valid @RequestBody(required = false) Dates dates, BindingResult bindingResult)
             throws ValidationException {
         if (bindingResult.hasErrors())
@@ -73,7 +113,16 @@ public class UsersController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/dates-param")
+    @GetMapping(path = "/dates-param", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Getting the list of users(URL parameters)",
+            description = "Getting the list of users by their date of birth, dates are passed through URL parameters"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UsersDto.class))),
+            @ApiResponse(responseCode = "400" ,description = "Bad Request"),
+            @ApiResponse(responseCode = "404" ,description = "Not Found")
+    })
     public ResponseEntity<Object> getAllByDatesParam(@Valid Dates dates, BindingResult bindingResult)
             throws ValidationException {
         if (bindingResult.hasErrors())
